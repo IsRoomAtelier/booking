@@ -224,7 +224,7 @@ async function doLogin() {
   const pw = document.getElementById('pw-input').value;
   if (!pw) return;
   try {
-    const r = await apiFetch({ action: 'adminLogin', password: pw });
+    const r = await apiFetch({ action: 'login', password: pw });
     if (r.success) {
       adminPw = pw;
       document.getElementById('login-screen').style.display = 'none';
