@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>後台管理｜isroom 遺室</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden;max-width:100vw}
+body{overflow-x:hidden;max-width:100vw}
+:root{
+  --black:#0a0806;--surface:#16120e;--surface2:#1e1812;--surface3:#251e16;
+  --red:#9A0E0E;--red-bright:#c41212;--red-dim:#6b0a0a;--border-red:#3d1010;
+  --green:#1a4a1a;--green-bright:#4a9a4a;
+  --text:#e8e0d5;--text-muted:#9a8f82;--text-dim:#5a5048;--border:#2a2218;
+}
+body{background:var(--black);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh}
+/* ── Login ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{width:100%;max-width:340px;text-align:center}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:3px;color:var(--text);margin-bottom:6px}
+.login-sub{font-size:10px;letter-spacing:5px;color:var(--text-muted);text-transform:uppercase;margin-bottom:40px}
+.login-box input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:14px 18px;font-family:'Noto Sans TC',sans-serif;font-size:15px;letter-spacing:4px;text-align:center;outline:none;border-radius:0;margin-bottom:12px;-webkit-appearance:none}
+.login-box input:focus{border-color:var(--red-dim)}
+.login-box input::placeholder{letter-spacing:2px;font-size:13px;color:var(--text-dim)}
+.login-err{font-size:11px;color:var(--red-bright);letter-spacing:2px;height:16px;margin-bottom:12px}
+/* ── Buttons ── */
+.btn{background:transparent;border:1px solid var(--red-dim);color:var(--text);padding:12px 20px;font-family:'Noto Sans TC',sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;border-radius:0;white-space:nowrap}
+.btn::before{content:'';position:absolute;left:-100%;top:0;bottom:0;width:100%;background:var(--red-dim);transition:left 0.25s;z-index:0}
+.btn:hover::before{left:0}
+.btn span{position:relative;z-index:1}
+.btn:disabled{opacity:0.3;cursor:not-allowed}
+.btn-full{width:100%}
+.btn-sm{padding:7px 14px;font-size:10px;letter-spacing:2px}
+.btn-ghost{border-color:var(--border);color:var(--text-muted)}
+.btn-ghost::before{background:var(--surface2)}
+.btn-danger{border-color:#6b2020;color:#c44}
+.btn-danger::before{background:#3d1010}
+.btn-green{border-color:#2a5a2a;color:var(--green-bright)}
+.btn-green::before{background:var(--green)}
+/* ── Admin shell ── */
+#admin-shell{display:none}
+.admin-header{background:var(--surface);border-bottom:1px solid var(--border-red);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.admin-logo{font-family:'Cormorant Garamond',serif;font-size:18px;letter-spacing:3px;color:var(--text);flex:1}
+.admin-tabs{display:flex;gap:0;border:1px solid var(--border);overflow:hidden}
+.tab-btn{background:transparent;border:none;border-right:1px solid var(--border);color:var(--text-muted);padding:9px 18px;font-family:'Noto Sans TC',sans-serif;font-size:10px;letter-spacing:3px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:var(--surface2);color:var(--text);border-bottom:2px solid var(--red)}
+.tab-btn:hover:not(.active){background:var(--surface2)}
+.tab-content{display:none;padding:28px 24px;max-width:1100px;margin:0 auto}
+.tab-content.active{display:block}
+/* ── Section labels ── */
+.section-label{font-size:10px;letter-spacing:6px;color:var(--red);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.section-label::before,.section-label::after{content:'';flex:1;height:1px;background:var(--border-red)}
+/* ── Table ── */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--border-red);text-align:left;white-space:nowrap}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+.data-table tr:hover td{background:var(--surface)}
+/* ── Status badges ── */
+.badge{font-size:9px;letter-spacing:2px;padding:3px 8px;text-transform:uppercase;border:1px solid;display:inline-block;white-space:nowrap}
+.badge-open{color:var(--green-bright);border-color:#2a5a2a;background:#0d1f0d}
+.badge-full{color:#c47010;border-color:#5a3a0a;background:#1a1005}
+.badge-closed{color:var(--text-dim);border-color:var(--border)}
+.badge-pending{color:#c47010;border-color:#5a3a0a;background:#1a1005}
+.badge-confirmed{color:var(--green-bright);border-color:#2a5a2a;background:#0d1f0d}
+.badge-cancelled{color:var(--red-bright);border-color:var(--red-dim);background:#1a0505}
+/* ── Form elements ── */
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+label.fl{font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase}
+input.fi,select.fi,textarea.fi{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;outline:none;transition:border-color 0.2s;border-radius:0;width:100%;-webkit-appearance:none}
+input.fi:focus,select.fi:focus,textarea.fi:focus{border-color:var(--red-dim)}
+input.fi::placeholder,textarea.fi::placeholder{color:var(--text-dim)}
+select.fi option{background:var(--surface2)}
+textarea.fi{resize:vertical;min-height:60px;line-height:1.6}
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--text);margin-bottom:14px;letter-spacing:1px}
+/* ── Stats row ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px}
+.stat-box{background:var(--surface);border:1px solid var(--border-red);padding:16px 20px}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--red-bright);line-height:1}
+.stat-label{font-size:10px;letter-spacing:3px;color:var(--text-muted);margin-top:6px;text-transform:uppercase}
+/* ── Modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;padding:24px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-red);width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border-red)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:18px;letter-spacing:2px;color:var(--text);flex:1}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+/* ── Misc ── */
+.loading{text-align:center;color:var(--text-muted);font-size:11px;letter-spacing:4px;padding:40px;text-transform:uppercase}
+.empty{text-align:center;color:var(--text-dim);font-size:12px;letter-spacing:3px;padding:40px}
+.divider{height:1px;background:var(--border);margin:24px 0}
+.action-row{display:flex;gap:8px;flex-wrap:wrap}
+.overflow-x{overflow-x:auto}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-title">isroom 遺室</div>
+    <div class="login-sub">Admin Panel</div>
+    <input type="password" id="pw-input" placeholder="請輸入管理密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="login-err"></div>
+    <button class="btn btn-full" onclick="doLogin()"><span>進入後台</span></button>
+  </div>
+</div>
+
+<!-- ADMIN SHELL -->
+<div id="admin-shell">
+  <div class="admin-header">
+    <div class="admin-logo">isroom ✦ 後台</div>
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('bookings')"><span>預約管理</span></button>
+      <button class="tab-btn" onclick="switchTab('slots')"><span>時段管理</span></button>
+      <button class="tab-btn" onclick="switchTab('templates')"><span>課程管理</span></button>
+      <button class="tab-btn" onclick="switchTab('settings')"><span>系統設定</span></button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()"><span>登出</span></button>
+  </div>
+
+  <!-- TAB: 預約管理 -->
+  <div id="tab-bookings" class="tab-content active">
+    <div class="stats-row" id="booking-stats"></div>
+    <div class="section-label">預約列表</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <select class="fi" id="filter-status" onchange="loadBookings()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-size:12px;border-radius:0;outline:none">
+        <option value="">全部狀態</option>
+        <option value="pending">待確認</option>
+        <option value="confirmed">已確認</option>
+        <option value="cancelled">已取消</option>
+      </select>
+      <button class="btn btn-sm" onclick="loadBookings()"><span>重新整理</span></button>
+    </div>
+    <div class="overflow-x">
+      <div id="bookings-table"><div class="loading">— 載入中 —</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: 時段管理 -->
+  <div id="tab-slots" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div class="section-label" style="margin-bottom:0;flex:1">時段列表</div>
+      <button class="btn btn-sm" onclick="openSlotModal()"><span>+ 新增時段</span></button>
+    </div>
+    <div class="overflow-x">
+      <div id="slots-table"><div class="loading">— 載入中 —</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: 課程管理 -->
+  <div id="tab-templates" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div class="section-label" style="margin-bottom:0;flex:1">課程列表</div>
+      <button class="btn btn-sm" onclick="openTplModal()"><span>+ 新增課程</span></button>
+    </div>
+    <div id="templates-list"><div class="loading">— 載入中 —</div></div>
+  </div>
+
+  <!-- TAB: 系統設定 -->
+  <div id="tab-settings" class="tab-content">
+    <div class="section-label">付款資訊設定</div>
+    <div id="settings-form"><div class="loading">— 載入中 —</div></div>
+  </div>
+</div>
+
+<!-- MODAL: 預約詳情 -->
+<div class="modal-bg" id="modal-booking">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">預約詳情</div>
+      <button class="modal-close" onclick="closeModal('modal-booking')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-booking-body"></div>
+    <div class="modal-footer" id="modal-booking-footer"></div>
+  </div>
+</div>
+
+<!-- MODAL: 時段 -->
+<div class="modal-bg" id="modal-slot">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-slot-title">新增時段</div>
+      <button class="modal-close" onclick="closeModal('modal-slot')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-slot-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-slot')"><span>取消</span></button>
+      <button class="btn btn-sm" onclick="saveSlot()"><span>儲存</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 課程 -->
+<div class="modal-bg" id="modal-tpl">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-tpl-title">新增課程</div>
+      <button class="modal-close" onclick="closeModal('modal-tpl')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-tpl-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-tpl')"><span>取消</span></button>
+      <button class="btn btn-sm" onclick="saveTpl()"><span>儲存</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbyW5KGKk-VTH1osOHwSznzTqDUDdpq3xqdimLLexmrOe47ZS0KP0EEd0hKJLRuMss7FEg/exec';
+let adminPw = '';
+let cache = { bookings: [], slots: [], templates: [], settings: {} };
+let editingSlotId = null, editingTplId = null;
+
+// ── Auth ─────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw) return;
+  try {
+    const r = await apiFetch({ action: 'adminLogin', password: pw });
+    if (r.success) {
+      adminPw = pw;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-shell').style.display = 'block';
+      loadAll();
+    } else {
+      document.getElementById('login-err').textContent = '密碼錯誤';
+    }
+  } catch(e) {
+    document.getElementById('login-err').textContent = '連線失敗，請重試';
+  }
+}
+
+function doLogout() {
+  adminPw = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-shell').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+}
+
+// ── API helper ───────────────────────────────────────────
+async function apiFetch(body) {
+  const r = await fetch(API, { method: 'POST', body: JSON.stringify({ ...body, password: adminPw }) });
+  return r.json();
+}
+async function apiGet(params) {
+  const qs = new URLSearchParams({ ...params, password: adminPw }).toString();
+  const r = await fetch(API + '?' + qs);
+  return r.json();
+}
+
+// ── Load all ─────────────────────────────────────────────
+function loadAll() {
+  loadBookings();
+  loadSlots();
+  loadTemplates();
+  loadSettings();
+}
+
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── Bookings ─────────────────────────────────────────────
+async function loadBookings() {
+  document.getElementById('bookings-table').innerHTML = '<div class="loading">— 載入中 —</div>';
+  try {
+    const status = document.getElementById('filter-status').value;
+    const d = await apiGet({ action: 'getBookings', status });
+    cache.bookings = d.bookings || [];
+    renderBookingStats();
+    renderBookingsTable();
+  } catch(e) {
+    document.getElementById('bookings-table').innerHTML = '<div class="empty">載入失敗</div>';
+  }
+}
+
+function renderBookingStats() {
+  const b = cache.bookings;
+  const total = b.length;
+  const pending = b.filter(x => x.status === 'pending').length;
+  const confirmed = b.filter(x => x.status === 'confirmed').length;
+  const revenue = b.filter(x => x.status === 'confirmed').reduce((s, x) => s + (parseFloat(x.total_amount) || 0), 0);
+  document.getElementById('booking-stats').innerHTML = [
+    ['總預約數', total], ['待確認', pending], ['已確認', confirmed],
+    ['確認收入', 'NT$ ' + revenue.toLocaleString()]
+  ].map(([l, n]) => `<div class="stat-box"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`).join('');
+}
+
+function renderBookingsTable() {
+  const b = cache.bookings;
+  if (!b.length) { document.getElementById('bookings-table').innerHTML = '<div class="empty">暫無預約資料</div>'; return; }
+  let html = `<table class="data-table"><thead><tr>
+    <th>預約編號</th><th>姓名</th><th>課程</th><th>日期時段</th><th>人數</th><th>金額</th><th>末五碼</th><th>狀態</th><th>操作</th>
+  </tr></thead><tbody>`;
+  b.forEach(bk => {
+    html += `<tr>
+      <td style="font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--text-dim)">${bk.booking_id || '—'}</td>
+      <td>${bk.contact_name || '—'}</td>
+      <td style="color:var(--text-muted);font-size:12px">${bk.template_title || bk.template_id || '—'}</td>
+      <td style="font-size:12px;white-space:nowrap">${bk.slot_date || '—'} ${bk.start_time || ''}</td>
+      <td style="text-align:center">${bk.participants || '—'}</td>
+      <td style="font-family:'Cormorant Garamond',serif;color:var(--red-bright)">NT$ ${Number(bk.total_amount || 0).toLocaleString()}</td>
+      <td style="letter-spacing:3px;font-family:'Cormorant Garamond',serif">${bk.transfer_last5 || '—'}</td>
+      <td><span class="badge badge-${bk.status}">${statusLabel(bk.status)}</span></td>
+      <td><button class="btn btn-sm btn-ghost" onclick="openBookingModal('${bk.booking_id}')"><span>詳情</span></button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('bookings-table').innerHTML = html;
+}
+
+function statusLabel(s) {
+  return { pending:'待確認', confirmed:'已確認', cancelled:'已取消' }[s] || s;
+}
+
+function openBookingModal(id) {
+  const bk = cache.bookings.find(b => b.booking_id === id);
+  if (!bk) return;
+  const rows = [
+    ['預約編號', bk.booking_id], ['課程', bk.template_title || bk.template_id],
+    ['日期', bk.slot_date], ['時段', (bk.start_time || '') + '–' + (bk.end_time || '')],
+    ['人數', bk.participants], ['金額', 'NT$ ' + Number(bk.total_amount || 0).toLocaleString()],
+    ['末五碼', bk.transfer_last5], ['姓名', bk.contact_name],
+    ['電話', bk.phone], ['信箱', bk.email],
+    ['備注', bk.note || '—'], ['建立時間', bk.created_at],
+  ];
+  document.getElementById('modal-booking-body').innerHTML =
+    rows.map(([k, v]) => `<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;min-width:80px;padding-top:2px">${k}</div>
+      <div style="font-size:13px;color:var(--text);flex:1">${v || '—'}</div>
+    </div>`).join('') +
+    `<div style="margin-top:16px"><span class="badge badge-${bk.status}" style="font-size:11px;padding:5px 12px">${statusLabel(bk.status)}</span></div>`;
+  const footer = document.getElementById('modal-booking-footer');
+  let btns = '';
+  if (bk.status === 'pending') {
+    btns += `<button class="btn btn-sm btn-green" onclick="updateBookingStatus('${id}','confirmed')"><span>✓ 確認預約</span></button>`;
+    btns += `<button class="btn btn-sm btn-danger" onclick="updateBookingStatus('${id}','cancelled')"><span>✕ 取消</span></button>`;
+  } else if (bk.status === 'confirmed') {
+    btns += `<button class="btn btn-sm btn-danger" onclick="updateBookingStatus('${id}','cancelled')"><span>✕ 取消預約</span></button>`;
+  }
+  btns += `<button class="btn btn-sm btn-ghost" onclick="closeModal('modal-booking')"><span>關閉</span></button>`;
+  footer.innerHTML = btns;
+  document.getElementById('modal-booking').classList.add('open');
+}
+
+async function updateBookingStatus(id, status) {
+  try {
+    const r = await apiFetch({ action: 'updateBookingStatus', bookingId: id, status });
+    if (r.success) { closeModal('modal-booking'); loadBookings(); }
+    else alert('更新失敗：' + r.message);
+  } catch(e) { alert('操作失敗'); }
+}
+
+// ── Slots ─────────────────────────────────────────────────
+async function loadSlots() {
+  document.getElementById('slots-table').innerHTML = '<div class="loading">— 載入中 —</div>';
+  try {
+    const d = await apiGet({ action: 'getAdminSlots' });
+    cache.slots = d.slots || [];
+    renderSlotsTable();
+  } catch(e) {
+    document.getElementById('slots-table').innerHTML = '<div class="empty">載入失敗</div>';
+  }
+}
+
+function renderSlotsTable() {
+  const s = cache.slots;
+  if (!s.length) { document.getElementById('slots-table').innerHTML = '<div class="empty">暫無時段資料</div>'; return; }
+  let html = `<table class="data-table"><thead><tr>
+    <th>日期</th><th>開始</th><th>結束</th><th>容量</th><th>已預約</th><th>狀態</th><th>操作</th>
+  </tr></thead><tbody>`;
+  s.forEach(sl => {
+    html += `<tr>
+      <td style="font-family:'Cormorant Garamond',serif;font-size:16px">${sl.date || '—'}</td>
+      <td>${sl.start_time || '—'}</td><td>${sl.end_time || '—'}</td>
+      <td style="text-align:center">${sl.max_capacity || '—'}</td>
+      <td style="text-align:center">${sl.current_bookings || 0}</td>
+      <td><span class="badge badge-${sl.status}">${sl.status || '—'}</span></td>
+      <td><div class="action-row">
+        <button class="btn btn-sm btn-ghost" onclick="openSlotModal('${sl.id}')"><span>編輯</span></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSlot('${sl.id}')"><span>刪除</span></button>
+      </div></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('slots-table').innerHTML = html;
+}
+
+function openSlotModal(id) {
+  editingSlotId = id || null;
+  const sl = id ? cache.slots.find(s => s.id === id) : {};
+  document.getElementById('modal-slot-title').textContent = id ? '編輯時段' : '新增時段';
+  document.getElementById('modal-slot-body').innerHTML = `
+    <div class="form-row">
+      <div class="form-group"><label class="fl">日期</label><input class="fi" id="sl-date" type="date" value="${sl?.date?.replace(/\//g,'-') || ''}"></div>
+      <div class="form-group"><label class="fl">開始時間</label><input class="fi" id="sl-start" type="time" value="${sl?.start_time || ''}"></div>
+      <div class="form-group"><label class="fl">結束時間</label><input class="fi" id="sl-end" type="time" value="${sl?.end_time || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="fl">最大容量</label><input class="fi" id="sl-cap" type="number" min="1" value="${sl?.max_capacity || 6}"></div>
+      <div class="form-group"><label class="fl">狀態</label>
+        <select class="fi" id="sl-status">
+          <option value="open" ${sl?.status==='open'?'selected':''}>開放</option>
+          <option value="full" ${sl?.status==='full'?'selected':''}>額滿</option>
+          <option value="closed" ${sl?.status==='closed'?'selected':''}>關閉</option>
+        </select>
+      </div>
+    </div>`;
+  document.getElementById('modal-slot').classList.add('open');
+}
+
+async function saveSlot() {
+  const data = {
+    action: editingSlotId ? 'updateSlot' : 'createSlot',
+    slotId: editingSlotId,
+    date: document.getElementById('sl-date').value,
+    startTime: document.getElementById('sl-start').value,
+    endTime: document.getElementById('sl-end').value,
+    maxCapacity: document.getElementById('sl-cap').value,
+    status: document.getElementById('sl-status').value
+  };
+  try {
+    const r = await apiFetch(data);
+    if (r.success) { closeModal('modal-slot'); loadSlots(); }
+    else alert('儲存失敗：' + r.message);
+  } catch(e) { alert('操作失敗'); }
+}
+
+async function deleteSlot(id) {
+  if (!confirm('確定刪除此時段？')) return;
+  try {
+    const r = await apiFetch({ action: 'deleteSlot', slotId: id });
+    if (r.success) loadSlots();
+    else alert('刪除失敗：' + r.message);
+  } catch(e) { alert('操作失敗'); }
+}
+
+// ── Templates ─────────────────────────────────────────────
+async function loadTemplates() {
+  document.getElementById('templates-list').innerHTML = '<div class="loading">— 載入中 —</div>';
+  try {
+    const d = await apiGet({ action: 'getTemplates' });
+    cache.templates = d.templates || [];
+    renderTemplatesList();
+  } catch(e) {
+    document.getElementById('templates-list').innerHTML = '<div class="empty">載入失敗</div>';
+  }
+}
+
+function renderTemplatesList() {
+  const t = cache.templates;
+  if (!t.length) { document.getElementById('templates-list').innerHTML = '<div class="empty">暫無課程資料</div>'; return; }
+  document.getElementById('templates-list').innerHTML = t.map(tpl => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="card-title">${tpl.title}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${tpl.tagline || ''}</div>
+          <div style="font-size:12px;color:var(--text-dim)">${(tpl.description || '').slice(0, 80)}${tpl.description?.length > 80 ? '⋯' : ''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--red-bright)">NT$ ${Number(tpl.price_1 || 0).toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:12px">1 人起</div>
+          <div class="action-row" style="justify-content:flex-end">
+            <button class="btn btn-sm btn-ghost" onclick="openTplModal('${tpl.id}')"><span>編輯</span></button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openTplModal(id) {
+  editingTplId = id || null;
+  const t = id ? cache.templates.find(x => x.id === id) : {};
+  document.getElementById('modal-tpl-title').textContent = id ? '編輯課程' : '新增課程';
+  document.getElementById('modal-tpl-body').innerHTML = `
+    <div class="form-row">
+      <div class="form-group" style="flex:2"><label class="fl">課程名稱</label><input class="fi" id="tpl-title" value="${t?.title || ''}"></div>
+      <div class="form-group"><label class="fl">時長說明</label><input class="fi" id="tpl-duration" value="${t?.duration || ''}" placeholder="例：3 小時"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="fl">副標語</label><input class="fi" id="tpl-tagline" value="${t?.tagline || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="fl">課程說明</label><textarea class="fi" id="tpl-desc" rows="3">${t?.description || ''}</textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="fl">圖片網址</label><input class="fi" id="tpl-img" value="${t?.image_url || ''}" placeholder="https://..."></div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:14px">定價設定</div>
+    <div class="form-row">
+      ${[1,2,3,4,5,6].map(n => `
+        <div class="form-group" style="min-width:120px">
+          <label class="fl">${n} 人${n===1?' (必填)':' (選填)'}</label>
+          <input class="fi" id="tpl-p${n}" type="number" value="${t?.['price_'+n] || ''}" placeholder="NT$">
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('modal-tpl').classList.add('open');
+}
+
+async function saveTpl() {
+  const prices = {};
+  [1,2,3,4,5,6].forEach(n => {
+    const v = document.getElementById('tpl-p'+n).value;
+    if (v) prices['price_'+n] = v;
+  });
+  const data = {
+    action: editingTplId ? 'updateTemplate' : 'createTemplate',
+    templateId: editingTplId,
+    title: document.getElementById('tpl-title').value,
+    tagline: document.getElementById('tpl-tagline').value,
+    description: document.getElementById('tpl-desc').value,
+    duration: document.getElementById('tpl-duration').value,
+    imageUrl: document.getElementById('tpl-img').value,
+    ...prices
+  };
+  try {
+    const r = await apiFetch(data);
+    if (r.success) { closeModal('modal-tpl'); loadTemplates(); }
+    else alert('儲存失敗：' + r.message);
+  } catch(e) { alert('操作失敗'); }
+}
+
+// ── Settings ──────────────────────────────────────────────
+async function loadSettings() {
+  document.getElementById('settings-form').innerHTML = '<div class="loading">— 載入中 —</div>';
+  try {
+    const d = await apiGet({ action: 'getSettings' });
+    cache.settings = d.settings || {};
+    renderSettingsForm();
+  } catch(e) {
+    document.getElementById('settings-form').innerHTML = '<div class="empty">載入失敗</div>';
+  }
+}
+
+function renderSettingsForm() {
+  const s = cache.settings;
+  document.getElementById('settings-form').innerHTML = `
+    <div class="card">
+      <div class="card-title">匯款帳戶資訊</div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">銀行代號</label><input class="fi" id="s-bank-code" value="${s.bank_code || ''}"></div>
+        <div class="form-group"><label class="fl">銀行名稱</label><input class="fi" id="s-bank-name" value="${s.bank_name || ''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">帳號</label><input class="fi" id="s-acct" value="${s.account_number || ''}"></div>
+        <div class="form-group"><label class="fl">戶名</label><input class="fi" id="s-name" value="${s.account_name || ''}"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-title">其他設定</div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">管理密碼</label><input class="fi" id="s-pw" type="password" placeholder="留空表示不更改"></div>
+        <div class="form-group"><label class="fl">時段鎖定時間（分鐘）</label><input class="fi" id="s-lock" type="number" value="${s.lock_minutes || 10}"></div>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn" onclick="saveSettings()"><span>儲存設定</span></button>
+      </div>
+    </div>`;
+}
+
+async function saveSettings() {
+  const data = {
+    action: 'updateSettings',
+    bankCode: document.getElementById('s-bank-code').value,
+    bankName: document.getElementById('s-bank-name').value,
+    accountNumber: document.getElementById('s-acct').value,
+    accountName: document.getElementById('s-name').value,
+    lockMinutes: document.getElementById('s-lock').value,
+  };
+  const pw = document.getElementById('s-pw').value;
+  if (pw) data.newPassword = pw;
+  try {
+    const r = await apiFetch(data);
+    if (r.success) alert('設定已儲存');
+    else alert('儲存失敗：' + r.message);
+  } catch(e) { alert('操作失敗'); }
+}
+
+// ── Modal ─────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
