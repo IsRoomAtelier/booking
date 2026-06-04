@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>體驗課程預約｜isroom 遺室</title>
-<meta name="description" content="Le Hemora Parfum 赫墨拉之水體驗課程預約。魔法世界主題調香、命理調香體驗課。">
+<meta name="description" content="Le Hemora Parfum isroom 遺室 體驗課程預約">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:hidden;max-width:100vw}
-body{overflow-x:hidden;max-width:100vw}
+html,body{overflow-x:hidden;max-width:100%;width:100%}
 :root{
   --black:#0a0806;--surface:#16120e;--surface2:#1e1812;--surface3:#251e16;
   --red:#9A0E0E;--red-bright:#c41212;--red-dim:#6b0a0a;--border-red:#3d1010;
@@ -89,7 +88,8 @@ header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:transl
 .date-header.open + .time-options{display:block}
 .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px}
 .time-btn{background:var(--surface);border:1px solid var(--border);padding:clamp(10px,2vw,14px) 8px;cursor:pointer;text-align:center;transition:all 0.2s;border-radius:0;width:100%}
-.time-btn:hover{border-color:var(--border-red)}
+.time-btn:hover:not(.disabled){border-color:var(--border-red)}
+.time-btn.disabled{opacity:0.4;cursor:not-allowed}
 .time-btn.selected{border-color:var(--red-bright);background:var(--surface2)}
 .time-range{font-family:'Cormorant Garamond',serif;font-size:clamp(14px,3vw,17px);color:var(--text);display:block}
 .time-spots{font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;display:block}
@@ -344,6 +344,16 @@ async function init() {
   }
 }
 
+// Auto refresh slots every 60s to pick up lock changes
+setInterval(async () => {
+  try {
+    const r = await fetch(API + '?action=getSlots');
+    const d = await r.json();
+    state.slots = (d.slots || []).filter(s => s.status === 'open' || s.status === 'full');
+    renderSlots();
+  } catch(e) {}
+}, 60000);
+
 // ── 渲染課程卡片 ─────────────────────────────────────────
 function renderCourseCards() {
   const container = document.getElementById('course-cards');
@@ -527,7 +537,7 @@ async function goToForm() {
   try {
     const r = await fetch(API, {
       method: 'POST',
-      body: JSON.stringify({ action: 'lockSlot', slotId: state.selectedSlot.id })
+      body: JSON.stringify({ action: 'lockSlot', slotId: state.selectedSlot.id, selectedStartTime: state.selectedSlot.startTime })
     });
     const d = await r.json();
     if (!d.success) { alert(d.message); return; }
