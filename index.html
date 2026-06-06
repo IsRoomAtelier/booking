@@ -486,7 +486,9 @@ function renderSlots() {
     const nd = normalizeDate(s.date);
     const d = new Date(nd.replace(/\//g,'-') + 'T00:00:00');
     const dayName = '週' + DAYS[d.getDay()];
-    const spots = parseInt(s.max_capacity) - (parseInt(s.current_bookings) || 0);
+    const confirmedBookings = parseInt(s.current_bookings) || 0;
+    const pendingPeople = parseInt(s.pending_people) || 0;
+    const spots = parseInt(s.max_capacity) - confirmedBookings - pendingPeople;
     const isFull = s.status === 'full' || spots <= 0;
     const opts = isFull ? [] : getStartOptions(s);
     const isOpen = openDateIdx === i;
@@ -695,6 +697,27 @@ async function submitBooking() {
   const last5 = document.getElementById('f-last5').value;
   if (last5.length !== 5) { document.getElementById('err-last5').style.display = 'block'; return; }
   document.getElementById('err-last5').style.display = 'none';
+
+  // 退款欄位驗證（在付款頁，送出時才讀取）
+  const refundBank    = (document.getElementById('refund-bank-code')?.value || '').trim();
+  const refundAccount = (document.getElementById('refund-account')?.value || '').trim();
+  const refundErr     = document.getElementById('refund-err');
+  if (refundBank || refundAccount) {
+    if (!/^\d{3,4}$/.test(refundBank)) {
+      if (refundErr) refundErr.textContent = '銀行代號請填 3-4 碼數字';
+      document.getElementById('refund-bank-code').focus();
+      return;
+    }
+    if (!/^\d{10,16}$/.test(refundAccount)) {
+      if (refundErr) refundErr.textContent = '帳號請填 10-16 碼數字';
+      document.getElementById('refund-account').focus();
+      return;
+    }
+    if (refundErr) refundErr.textContent = '';
+  }
+  state.refundBankCode = refundBank;
+  state.refundAccount  = refundAccount;
+
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.querySelector('span').textContent = '送出中⋯⋯';
