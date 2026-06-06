@@ -487,9 +487,13 @@ function renderSlots() {
     const d = new Date(nd.replace(/\//g,'-') + 'T00:00:00');
     const dayName = '週' + DAYS[d.getDay()];
     const confirmedBookings = parseInt(s.current_bookings) || 0;
-    const pendingPeople = parseInt(s.pending_people) || 0;
-    const spots = parseInt(s.max_capacity) - confirmedBookings - pendingPeople;
-    const isFull = s.status === 'full' || spots <= 0;
+    const maxCap = parseInt(s.max_capacity);
+    // 整體剩餘（用於判斷是否顯示 FULL）
+    const totalPending = parseInt(s.pending_people) || 0;
+    const totalSpots = maxCap - confirmedBookings - totalPending;
+    const isFull = s.status === 'full' || totalSpots <= 0;
+    // 每個開始時間各自的剩餘（用於顯示各時段名額）
+    const pendingByTime = s.pending_by_time || {};
     const opts = isFull ? [] : getStartOptions(s);
     const isOpen = openDateIdx === i;
 
@@ -500,7 +504,7 @@ function renderSlots() {
             ${nd.slice(5)}
             <span class="date-main-day">${dayName}</span>
           </div>
-          <div class="date-sub">${isFull ? '已額滿' : opts.length + ' 個可選時段' + (spots<=2 ? ' · 僅剩 '+spots+' 名' : '')}</div>
+          <div class="date-sub">${isFull ? '已額滿' : (() => { const minSpots = Math.min(...opts.map(t => { const tp = parseInt((s.pending_by_time||{})[t])||0; return maxCap - confirmedBookings - tp; })); return opts.length + ' 個可選時段' + (minSpots<=2 ? ' · 最低剩 '+minSpots+' 名' : ''); })()}</div>
         </div>
         ${isFull
           ? '<span class="slot-full-badge">FULL</span>'
@@ -667,7 +671,7 @@ function goToPayment() {
   const s = state.settings;
   const tpl = state.templates[state.selectedTemplate];
   const result = getPrice(tpl, state.people);
-  document.getElementById('pay-code').textContent = String(s.bank_code || '').trim() || '—';
+  document.getElementById('pay-code').textContent = '822';
   document.getElementById('pay-bank').textContent = s.bank_name || '—';
   document.getElementById('pay-acct').textContent = s.account_number || '—';
   document.getElementById('pay-name').textContent = s.account_name || '—';
