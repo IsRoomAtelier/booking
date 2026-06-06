@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>體驗課程預約｜isroom 遺室</title>
-<meta name="description" content="isroom 遺室 體驗課程預約。">
+<meta name="description" content="isroom 遺室 體驗課程預約">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{overflow-x:hidden;max-width:100%;width:100%}
-img,video,iframe,table,input,select,textarea,button{max-width:100%}
+html,body{overflow-x:hidden;max-width:100%;width:100%;position:relative}
+*{max-width:100%}
+img,video,iframe{max-width:100%;height:auto}
+input,select,textarea,button{max-width:100%;box-sizing:border-box}
 :root{
   --black:#0a0806;--surface:#16120e;--surface2:#1e1812;--surface3:#251e16;
   --red:#9A0E0E;--red-bright:#c41212;--red-dim:#6b0a0a;--border-red:#3d1010;
@@ -91,7 +93,9 @@ header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:transl
 .time-btn{background:var(--surface);border:1px solid var(--border);padding:clamp(10px,2vw,14px) 8px;cursor:pointer;text-align:center;transition:all 0.2s;border-radius:0;width:100%}
 .time-btn:hover:not(.disabled){border-color:var(--border-red)}
 .time-btn.disabled{opacity:0.4;cursor:not-allowed}
-.time-btn.selected{border-color:var(--red-bright);background:var(--surface2)}
+.time-btn.selected{border-color:var(--red-bright);background:var(--surface2);box-shadow:inset 0 0 0 1px var(--red-bright)}
+.time-btn.selected .time-range{color:var(--red-bright)}
+.time-btn.selected .time-spots{color:var(--text-muted)}
 .time-range{font-family:'Cormorant Garamond',serif;font-size:clamp(14px,3vw,17px);color:var(--text);display:block}
 .time-spots{font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;display:block}
 .time-spots.low{color:#c47010}
@@ -154,15 +158,24 @@ textarea{resize:vertical;min-height:76px;line-height:1.7}
 .upsell{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;min-height:18px;margin-bottom:20px}
 
 /* ── Payment ── */
-.payment-box{background:var(--surface);border:1px solid var(--border-red);padding:clamp(18px,4vw,28px);margin-bottom:24px;overflow:hidden}
+.payment-box{background:var(--surface);border:1px solid var(--border-red);padding:clamp(18px,4vw,28px);margin-bottom:24px;overflow:hidden;width:100%;word-break:break-all}
 .payment-title{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--text);margin-bottom:18px;letter-spacing:1px}
 .pay-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
 .pay-row:last-child{border-bottom:none}
 .pay-key{font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase}
-.pay-val{font-size:14px;color:var(--text);letter-spacing:1px;text-align:right;word-break:break-all}
+.pay-val{font-size:clamp(12px,3vw,14px);color:var(--text);letter-spacing:1px;text-align:right;word-break:break-all;overflow-wrap:break-word;min-width:0}
 .pay-val.hl{color:var(--red-bright);font-family:'Cormorant Garamond',serif;font-size:22px}
 .last5-wrap{margin:20px 0}
 .last5-wrap input{text-align:center;font-size:clamp(20px,5vw,28px);letter-spacing:clamp(6px,2vw,12px);font-family:'Cormorant Garamond',serif;width:100%}
+.refund-section{margin:0 0 24px;padding:16px;background:var(--surface2);border:1px solid var(--border)}
+.refund-label{font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}
+.refund-hint{font-size:11px;color:var(--text-dim);line-height:1.6;margin-bottom:12px}
+.refund-row{display:flex;gap:10px;flex-wrap:wrap}
+.refund-input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;outline:none;border-radius:0;-webkit-appearance:none}
+.refund-bank{max-width:clamp(90px,28vw,110px);flex:none}
+.refund-acct{flex:1}
+.refund-input:focus{border-color:var(--red-dim)}
+.refund-err{font-size:11px;color:var(--red-bright);min-height:16px;margin-top:6px;letter-spacing:1px}
 
 /* ── Success ── */
 .success-wrap{text-align:center;padding:clamp(40px,8vw,64px) 0}
@@ -192,7 +205,7 @@ textarea{resize:vertical;min-height:76px;line-height:1.7}
     </div>
     <div class="detail-panel" id="detail-panel">
       <div class="detail-inner">
-        <div id="detail-img-wrap"><div class="detail-img-ph"><span>Le Hemora</span></div></div>
+        <div id="detail-img-wrap"><div class="detail-img-ph"><span>isroom</span></div></div>
         <div class="detail-text">
           <div class="detail-which">已選課程說明</div>
           <div class="detail-title" id="detail-title"></div>
@@ -288,6 +301,15 @@ textarea{resize:vertical;min-height:76px;line-height:1.7}
     <input type="text" id="f-last5" maxlength="5" placeholder="_ _ _ _ _" oninput="this.value=this.value.replace(/\D/g,'')">
     <div class="err" id="err-last5">請輸入五位數字</div>
   </div>
+  <div class="refund-section">
+    <div class="refund-label">退款帳號（選填）</div>
+    <div class="refund-hint">若預約未能成立，退款將匯入此帳號；未填寫者取消時將由店主另行聯繫</div>
+    <div class="refund-row">
+      <input type="text" id="refund-bank-code" maxlength="4" placeholder="銀行代號" inputmode="numeric" class="refund-input refund-bank">
+      <input type="text" id="refund-account" maxlength="20" placeholder="帳號（不含空格）" inputmode="numeric" class="refund-input refund-acct">
+    </div>
+    <div class="refund-err" id="refund-err"></div>
+  </div>
   <button class="btn btn-full" id="submit-btn" onclick="submitBooking()"><span>送出預約申請 →</span></button>
   <div style="margin-top:12px">
     <button class="btn btn-ghost btn-full" onclick="showPage('page-form')"><span>← 返回修改資料</span></button>
@@ -382,8 +404,8 @@ function selectCourse(idx) {
   document.getElementById('detail-tags').innerHTML = buildTags(t);
   const imgWrap = document.getElementById('detail-img-wrap');
   imgWrap.innerHTML = t.image_url
-    ? `<img class="detail-img" src="${t.image_url}" onerror="this.outerHTML='<div class=detail-img-ph><span>Le Hemora</span></div>'">`
-    : '<div class="detail-img-ph"><span>Le Hemora</span></div>';
+    ? `<img class="detail-img" src="${t.image_url}" onerror="this.outerHTML='<div class=detail-img-ph><span>isroom</span></div>'">`
+    : '<div class="detail-img-ph"><span>isroom</span></div>';
   document.getElementById('detail-arrow').style.display = 'block';
   if (!state.detailOpen) openDetail();
   updateCTA();
@@ -643,11 +665,28 @@ function goToPayment() {
   const s = state.settings;
   const tpl = state.templates[state.selectedTemplate];
   const result = getPrice(tpl, state.people);
-  document.getElementById('pay-code').textContent = s.bank_code || '—';
+  document.getElementById('pay-code').textContent = String(s.bank_code || '').trim() || '—';
   document.getElementById('pay-bank').textContent = s.bank_name || '—';
   document.getElementById('pay-acct').textContent = s.account_number || '—';
   document.getElementById('pay-name').textContent = s.account_name || '—';
   document.getElementById('pay-amt').textContent = 'NT$ ' + result.total.toLocaleString();
+  // 儲存退款欄位至 state
+  const refundBank    = (document.getElementById('refund-bank-code')?.value || '').trim();
+  const refundAccount = (document.getElementById('refund-account')?.value || '').trim();
+  const refundErr     = document.getElementById('refund-err');
+  if (refundBank || refundAccount) {
+    if (!/^\d{3,4}$/.test(refundBank)) {
+      if (refundErr) refundErr.textContent = '銀行代號請填 3-4 碼數字';
+      return;
+    }
+    if (!/^\d{10,16}$/.test(refundAccount)) {
+      if (refundErr) refundErr.textContent = '帳號請填 10-16 碼數字';
+      return;
+    }
+    if (refundErr) refundErr.textContent = '';
+  }
+  state.refundBankCode = refundBank;
+  state.refundAccount  = refundAccount;
   showPage('page-payment');
 }
 
@@ -676,8 +715,8 @@ async function submitBooking() {
         participants: state.people,
         totalAmount: result.total,
         transferLast5: last5,
-        refundBankCode: refundBank,
-        refundAccount: refundAccount,
+        refundBankCode: state.refundBankCode || '',
+        refundAccount: state.refundAccount || '',
         note: document.getElementById('f-note').value
       })
     });
@@ -711,7 +750,8 @@ function resetAll() {
   state.people = 1;
   state.detailOpen = false;
   document.getElementById('p-num').textContent = '1';
-  ['f-name','f-email','f-phone','f-note','f-last5'].forEach(id => document.getElementById(id).value = '');
+  ['f-name','f-email','f-phone','f-note','f-last5','refund-bank-code','refund-account'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  state.refundBankCode = ''; state.refundAccount = '';
   document.getElementById('detail-panel').classList.remove('open');
   document.getElementById('detail-arrow').style.display = 'none';
   init();
